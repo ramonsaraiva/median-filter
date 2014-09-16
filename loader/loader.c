@@ -57,7 +57,7 @@ int load_ppm(char* p, image_t* img)
 				fgets(buffer, 128, in);
 				g = atoi(buffer);
 
-				fgets(buffer, 128, in); 
+				fgets(buffer, 128, in);
 				b = atoi(buffer);
 
 				rgb = (r << 16) | (g << 8) | b | (255 << 24);
@@ -86,7 +86,7 @@ int save_ppm(char* p, image_t* img)
 	out = fopen(p, "w");
 
 	fprintf(out, "P3\n");
-	fprintf(out, "# CREATOR: MEDIAN FILTER - RAMON & LUIS [UNISINOS]\n");
+	fprintf(out, "# CREATOR: MEDIAN FILTER - RAMON & LUIZ [UNISINOS]\n");
 	fprintf(out, "%d %d\n", img->width, img->height);
 	fprintf(out, "255\n");
 
