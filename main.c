@@ -12,6 +12,6 @@ int main(int argc, char** argv)
 	load_ppm("a.ppm", &img);
 	image_median_filter(&img);
 	save_ppm("b.ppm", &img);
-
+	image_free(&img);
 	return 0;
 }

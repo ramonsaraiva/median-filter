@@ -104,4 +104,5 @@ int save_ppm(char* p, image_t* img)
 			fprintf(out, "%d\n", b);
 		}
 	}
+	fclose(out);
 }
