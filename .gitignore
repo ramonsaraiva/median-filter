@@ -1,6 +1,7 @@
 !.gitignore
 *.swp
 *.vim
+*.ppm
 *~
 build
 tags
