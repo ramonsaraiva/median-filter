@@ -54,7 +54,7 @@ void image_median_filter(image_t* img)
 	{
 		pthread_join(median_thread[i], NULL);
 	}
-	image_copy(img, dest_img);
+	image_copy(dest_img, img);
 	image_free(dest_img);
 	free(dest_img);
 }
@@ -163,9 +163,9 @@ void* median_filter(void *number_void_ptr)
 
 void image_copy(image_t *orig, image_t *dest) {
 	image_free(dest);
-	memcpy(dest, orig, sizeof(image_t));
-	dest->pixels = (int *)malloc(sizeof(orig->pixels));
-	memcpy(dest->pixels, orig->pixels, sizeof(dest->pixels));
+	image_new(dest);
+	image_size(dest, orig->width, orig->height);
+	memcpy(dest->pixels, orig->pixels, dest->width*dest->height*sizeof(int));
 }
 
 void image_free(image_t *img) {
