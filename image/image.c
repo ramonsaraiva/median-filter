@@ -28,18 +28,17 @@ int image_get_pixel(image_t* img, int x, int y)
 
 void image_median_filter(image_t* img)
 {
-	int i, side1, side2;
+	int i, size;
 	dest_img = malloc(sizeof(image_t));
 	orig_img = img;
+	size = img->width * img->height;
 
-	get_sides(&side1, &side2);
-	if (THREADS > side1) {
+	if (THREADS > size) {
 		char error[1024];
-		sprintf(error,"Number of threads(%d) is grather than %d!\n",THREADS, side1);
+		sprintf(error,"Number of threads(%d) is grather than %d!\n",THREADS, size);
 		perror(error);
 		exit(1);
 	}
-	printf("MODE: %d\n",mode);
 
 	image_new(dest_img);
 	image_size(dest_img, img->width, img->height);
@@ -59,22 +58,6 @@ void image_median_filter(image_t* img)
 	free(dest_img);
 }
 
-void static get_sides(int* side1, int* side2)
-{
-	if (orig_img->width >= orig_img->height)
-	{
-		*side1 = orig_img->width;
-		*side2 = orig_img->height;
-		mode = NORMAL;
-	}
-	else
-	{
-		*side1 = orig_img->height;
-		*side2 = orig_img->width;
-		mode = REVERSE;
-	}
-}
-
 void* median_filter(void *number_void_ptr)
 {
 	int rgb;
@@ -84,80 +67,63 @@ void* median_filter(void *number_void_ptr)
 	int rgb_count;
 
 	int i;
-	int j;
 	int x;
 	int y;
 	int ax;
 	int ay;
 
-	int width;
-	int height;
+	int size;
 	int initial;
 	int end;
 	int number = (int)number_void_ptr;
 
-	get_sides(&width, &height);
+	size = orig_img->width * orig_img->height;
 
-	initial = width / THREADS * (number);
-	end = width / THREADS * (number + 1);
+	initial = size / THREADS * (number);
+	end = size / THREADS * (number + 1);
 	if (number+1 == THREADS)
 	{
-		end = width;
+		end = size;
 	}
 
 	printf("Thread #%d: init -> %d, end -> %d\n", number+1, initial, end);
+	int medianX, medianY;
+	medianX = medianY = 5;
 
 	// for each pixel
-	for (i = 0; i < height; i++)
+	for (i = initial; i < end; i++)
 	{
-		for (j = initial; j < end; j++)
+		int column, line;
+		line = i / orig_img->width;
+		column = i % orig_img->width;
+		r_sum = 0;
+		g_sum = 0;
+		b_sum = 0;
+		rgb_count = 0;
+
+		// for each pixel in 3x3 mask
+		for (x = 0 - (medianX/2); x <= medianX/2; x++)
 		{
-			r_sum = 0;
-			g_sum = 0;
-			b_sum = 0;
-			rgb_count = 0;
-
-			// for each pixel in 3x3 mask
-			for (y = -1; y <= 1; y++)
+			for (y = 0 - (medianY/2); y <= medianY/2; y++)
 			{
-				for (x = -1; x <= 1; x++)
+				// current pixel, so just continue
+/*				if (y == 0 && x == 0)
+					continue;*/
+				ay = line + y;
+				ax = column + x;
+				rgb_count++;
+				// check if pixel is in image
+				if (ay >= 0 && ay < orig_img->height && ax >= 0 && ax < orig_img->width)
 				{
-					// current pixel, so just continue
-					if (y == 1 && x == 1)
-						continue;
-
-					ay = i + y;
-					ax = j + x;
-
-					// check if pixel is in image
-					if (ay >= 0 && ay < height && ax >= 0 && ax < width)
-					{
-						if (mode == NORMAL)
-						{
-							rgb = image_get_pixel(orig_img, ax, ay);
-						}
-						else
-						{
-							rgb = image_get_pixel(orig_img, ay, ax);
-						}
-						r_sum += (rgb) & 0xFF;
-						g_sum += (rgb >> 8) & 0xFF;
-						b_sum += (rgb >> 16) & 0xFF;
-						rgb_count++;
-					}
+					rgb = image_get_pixel(orig_img, ax, ay);
+					r_sum += (rgb) & 0xFF;
+					g_sum += (rgb >> 8) & 0xFF;
+					b_sum += (rgb >> 16) & 0xFF;
 				}
 			}
-
-			rgb = (r_sum/rgb_count << 16) | (g_sum/rgb_count << 8) | b_sum/rgb_count | (255 << 24);
-			if (mode == NORMAL)
-			{
-				image_set_pixel(dest_img, rgb, j, i);
-			}
-			else
-			{
-				image_set_pixel(dest_img, rgb, i, j);
-			}
 		}
+		rgb = (r_sum/rgb_count << 16) | (g_sum/rgb_count << 8) | b_sum/rgb_count | (255 << 24);
+		image_set_pixel(dest_img, rgb, column, line);
 	}
 }
 
