@@ -47,32 +47,13 @@ int main(int argc, char** argv)
 	printf("Image res: %dx%d\n", img.width, img.height);
 	printf("Image size: %d\n", img_size);
 
+	limits[0] = 0;
+	limits[1] = img_size - 1;
+	int pixels[limits[1] - limits[0] + 1];
+
 	if (img_size < pixels_per_proc)
 	{
-//		i can do all the job!
-		int i;
-
-		printf("I can do it alone\n");
-
-		limits[0] = 0;
-		limits[1] = img_size - 1;
-		int pixels[limits[1] - limits[0] + 1];
-
 		image_median_filter(&img, limits, pixels);
-
-		for (i = limits[0]; i <= limits[1]; i++)
-		{
-			image_set_pixel(&img, pixels[i], i%img.width, i/img.width);
-		}
-
-		toc = tms();
-
-		time_one_thread = (toc - tic) / (float)1000;
-		printf("Time: %.4f\n", time_one_thread);
-		printf("Saving image..\n");
-		save_ppm(argv[2], &img);
-		printf("Done\n");
-		image_free(&img);
 	}
 	else
 	{
@@ -110,9 +91,24 @@ int main(int argc, char** argv)
 		printf("i will recv %d ints\n", c_limits[3] - c_limits[2] + 1);
 
 		MPI_Status status;
-		MPI_Recv(img.pixels[c_limits[0]], c_limits[1] - c_limits[0] + 1, MPI_INT, 0, 0, a_inter_comm, &status);
-		MPI_Recv(img.pixels[c_limits[2]], c_limits[3] - c_limits[2] + 1, MPI_INT, 0, 0, b_inter_comm, &status);
+		MPI_Recv(&pixels[c_limits[0]], c_limits[1] - c_limits[0] + 1, MPI_INT, 0, 0, a_inter_comm, &status);
+		MPI_Recv(&pixels[c_limits[2]], c_limits[3] - c_limits[2] + 1, MPI_INT, 0, 0, b_inter_comm, &status);
+
+		printf("recv\n");
 	}
+
+	int i;
+	for (i = limits[0]; i <= limits[1]; i++)
+		image_set_pixel(&img, pixels[i], i%img.width, i/img.width);
+
+	toc = tms();
+
+	time_one_thread = (toc - tic) / (float)1000;
+	printf("Time: %.4f\n", time_one_thread);
+	printf("Saving image..\n");
+	save_ppm(argv[2], &img);
+	printf("Done\n");
+	image_free(&img);
 	
 	MPI_Finalize();
 	return 0;

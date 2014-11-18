@@ -54,9 +54,6 @@ int main(int argc, char** argv)
 		img.pixels = pixels;
 
 		image_median_filter(&img, limits, pixels);
-
-		for (i = limits[0]; i <= limits[1]; i++)
-			image_set_pixel(&img, pixels[i], i%img.width, i/img.width);
 	}
 	else
 	{
@@ -64,7 +61,8 @@ int main(int argc, char** argv)
 	}
 
 	printf("i will send %d ints\n", limits[1] - limits[0] + 1);
-	MPI_Send(pixels[limits[0]], limits[1] - limits[0] + 1, MPI_INT, 0, 0, parent);
+	MPI_Send(&pixels[limits[0]], limits[1] - limits[0] + 1, MPI_INT, 0, 0, parent);
+	printf("sent\n");
 
 	MPI_Finalize();
 }
