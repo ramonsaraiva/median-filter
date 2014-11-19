@@ -51,6 +51,8 @@ int main(int argc, char** argv)
 	limits[1] = img_size - 1;
 	int pixels[limits[1] - limits[0] + 1];
 
+	tic = tms();
+
 	if (img_size < pixels_per_proc)
 	{
 		image_median_filter(&img, limits, pixels);
@@ -63,8 +65,6 @@ int main(int argc, char** argv)
 		c_limits[1] = (img_size/2) - 1;
 		c_limits[2] = img_size/2;
 		c_limits[3] = img_size-1;
-
-		printf("Children values => A %d ~ %d .. B %d ~ %d\n", c_limits[0], c_limits[1], c_limits[2], c_limits[3]);
 
 		int errcode;
 		MPI_Comm a_inter_comm, b_inter_comm;
@@ -87,14 +87,9 @@ int main(int argc, char** argv)
 		MPI_Send(&img.height, 1, MPI_INT, 0, 0, b_inter_comm);
 		MPI_Send(img.pixels, img_size, MPI_INT, 0, 0, b_inter_comm);
 
-		printf("i will recv %d ints\n", c_limits[1] - c_limits[0] + 1);
-		printf("i will recv %d ints\n", c_limits[3] - c_limits[2] + 1);
-
 		MPI_Status status;
 		MPI_Recv(&pixels[c_limits[0]], c_limits[1] - c_limits[0] + 1, MPI_INT, 0, 0, a_inter_comm, &status);
 		MPI_Recv(&pixels[c_limits[2]], c_limits[3] - c_limits[2] + 1, MPI_INT, 0, 0, b_inter_comm, &status);
-
-		printf("recv\n");
 	}
 
 	int i;

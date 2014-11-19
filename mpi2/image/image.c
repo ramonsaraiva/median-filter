@@ -50,7 +50,7 @@ void image_median_filter(image_t* orig, int limits[2], int* pixels)
 	printf(".. Median filter between %d and %d!\n", initial, end);
 
 	int k = 0;
-	for (j = initial; j < end; j++)
+	for (j = initial; j <= end; j++)
 	{
 		r_sum = 0;
 		g_sum = 0;
